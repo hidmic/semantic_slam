@@ -86,6 +86,7 @@ class SemanticCloud:
         """
         # Get point type
         point_type = rospy.get_param('/semantic_pcl/point_type')
+        #point_type = 0
         if point_type == 0:
             self.point_type = PointType.COLOR
             print('Generate color point cloud.')
@@ -99,8 +100,37 @@ class SemanticCloud:
             print("Invalid point type.")
             return
         # Get image size
-        self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
+        # self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
+        self.img_width, self.img_height = 640, 480
         # Set up CNN is use semantics
+        if self.point_type is PointType.COLOR:
+            print('Setting up CNN model...')
+            # Set device
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #GPU: device=cuda
+            # Get dataset
+            dataset = rospy.get_param('/semantic_pcl/dataset')
+            # Setup model
+            model_name ='pspnet'
+            model_path = rospy.get_param('/semantic_pcl/model_path')
+            #model_path = '/home/yubao/data/SpacialAI/catkin_ws/src/dataset/pspnet_sunrgbd_best_model180625_5k.pth'
+            if dataset == 'sunrgbd': # If use version fine tuned on sunrgbd dataset
+                self.n_classes = 38 # Semantic class number
+                self.model = get_model(model_name, self.n_classes, version = 'sunrgbd_res50')
+                state = torch.load(model_path, map_location='cuda:0')
+                self.model.load_state_dict(state)
+                self.cnn_input_size = (321, 321)
+                self.mean = np.array([104.00699, 116.66877, 122.67892]) # Mean value of dataset
+            elif dataset == 'ade20k':
+                self.n_classes = 150 # Semantic class number
+                self.model = get_model(model_name, self.n_classes, version = 'ade20k')
+                state = torch.load(model_path)
+                self.model.load_state_dict(convert_state_dict(state['model_state'])) # Remove 'module' from dictionary keys
+                self.cnn_input_size = (473, 473)
+                self.mean = np.array([104.00699, 116.66877, 122.67892]) # Mean value of dataset
+            self.model = self.model.to(self.device)
+            self.model.eval()
+            self.cmap = color_map(N = self.n_classes, normalized = False) # Color map for semantic classes
+
         if self.point_type is not PointType.COLOR:
             print('Setting up CNN model...')
             # Set device
@@ -155,6 +185,8 @@ class SemanticCloud:
             self.cloud_generator = ColorPclGenerator(intrinsic, self.img_width,self.img_height, frame_id , self.point_type)
         else:
             self.image_sub = rospy.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
+            #self.image_sub = rospy.Subscriber('/kinect2/hd/image_color_rect', Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
+
         print('Ready.')
 
     def color_callback(self, color_img_ros):
@@ -167,14 +199,23 @@ class SemanticCloud:
             color_img = self.bridge.imgmsg_to_cv2(color_img_ros, "bgr8") # Convert ros msg to numpy array
         except CvBridgeError as e:
             print(e)
+
+        # color_img = resize(color_img, (self.img_height, self.img_width),  mode = 'reflect', anti_aliasing=True, preserve_range = True)
+        color_img = cv2.resize(color_img, (self.img_width, self.img_height), interpolation=cv2.INTER_NEAREST)
+
         # Do semantic segmantation
         class_probs = self.predict(color_img)
         confidence, label = class_probs.max(1)
-        confidence, label = confidence.squeeze(0).numpy(), label.squeeze(0).numpy()
+        confidence, label = confidence.squeeze(0).cpu().numpy(), label.squeeze(0).cpu().numpy()
         label = resize(label, (self.img_height, self.img_width), order = 0, mode = 'reflect', anti_aliasing=False, preserve_range = True) # order = 0, nearest neighbour
         label = label.astype(np.int)
-        # Add semantic class colors
+
+        #Add semantic class colors
         decoded = decode_segmap(label, self.n_classes, self.cmap)        # Show input image and decoded image
+        
+        class_labels = np.unique(label)
+        print(class_labels)
+        
         confidence = resize(confidence, (self.img_height, self.img_width),  mode = 'reflect', anti_aliasing=True, preserve_range = True)
         cv2.imshow('Camera image', color_img)
         cv2.imshow('confidence', confidence)
@@ -193,6 +234,11 @@ class SemanticCloud:
             depth_img = self.bridge.imgmsg_to_cv2(depth_img_ros, "32FC1")
         except CvBridgeError as e:
             print(e)
+
+        # Resize RGB image
+        if depth_img.shape[0] is not self.img_height or depth_img.shape[1] is not self.img_width:
+            color_img = cv2.resize(color_img, (self.img_width, self.img_height), interpolation=cv2.INTER_NEAREST)
+        
         # Resize depth
         if depth_img.shape[0] is not self.img_height or depth_img.shape[1] is not self.img_width:
             depth_img = resize(depth_img, (self.img_height, self.img_width), order = 0, mode = 'reflect', anti_aliasing=False, preserve_range = True) # order = 0, nearest neighbour

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>orb_slam2</name>
+  <name>floatlazer_orb_slam2</name>
   <version>0.0.0</version>
   <description>ORB_SLAM2</description>
   <author>Raul Mur-Artal</author>

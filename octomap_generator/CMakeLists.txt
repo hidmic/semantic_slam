@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(octomap_generator)
+project(floatlazer_octomap_generator)
 
 # SET OCTOMAP_OMP to disable/enable OPENMP (experimental for octomap, default disabled)
 SET(OCTOMAP_OMP FALSE CACHE BOOL "Enable/disable OpenMP parallelization")

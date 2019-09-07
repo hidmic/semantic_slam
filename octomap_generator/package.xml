@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>octomap_generator</name>
+  <name>floatlazer_octomap_generator</name>
   <version>1.0.0</version>
   <description>Octomap generator</description>
 

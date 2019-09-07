@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-project(orb_slam2)
+project(floatlazer_orb_slam2)
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
@@ -35,7 +35,7 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake_modules)
 
-find_package(OpenCV 3.0 QUIET)
+find_package(OpenCV 3.1 QUIET)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
    if(NOT OpenCV_FOUND)
@@ -103,6 +103,15 @@ add_executable(rgbd
 )
 
 target_link_libraries(rgbd
+  ${LIBS}
+)
+
+# This is for test
+add_executable(slam_rgbd
+  src/ros_slam_rgbd.cc
+)
+
+target_link_libraries(slam_rgbd
   ${LIBS}
 )
 

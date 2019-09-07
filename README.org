@@ -1,0 +1,19 @@
+* Demo
+https://www.bilibili.com/video/av59793400/?p=13
+
+* Build
+1. Build ORB SLAM2
+3. Use =catkin_make= build ros project
+
+* Run bag file
+Download /demo.bag/ from the author.
+
+#+begin_example
+roslaunch floatlazer_semantic_slam semantic_mapping.launch
+
+rosbag play -l  --clock demo.bag
+#+end_example
+
+* Change Notes
+1. Rename =ORB_SLAM2= to =FLOATLAZER_ORB_SLAM2=
+1. Rename ros package name from =semantic_slam= to =floatlazer_semantic_slam=

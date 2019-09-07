@@ -2,3 +2,4 @@
 *.pth
 *.pkl
 .DS_Store
+.vscode

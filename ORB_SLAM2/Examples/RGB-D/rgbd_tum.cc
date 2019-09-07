@@ -17,8 +17,6 @@
 * You should have received a copy of the GNU General Public License
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
-
-
 #include<iostream>
 #include<algorithm>
 #include<fstream>
@@ -45,7 +43,7 @@ int main(int argc, char **argv)
     vector<string> vstrImageFilenamesRGB;
     vector<string> vstrImageFilenamesD;
     vector<double> vTimestamps;
-    string strAssociationFilename = string(argv[4]);
+    string strAssociationFilename = string(argv[4]); //argv[4]: path_to_sequence
     LoadImages(strAssociationFilename, vstrImageFilenamesRGB, vstrImageFilenamesD, vTimestamps);
 
     // Check consistency in the number of images and depthmaps

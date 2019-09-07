@@ -34,21 +34,31 @@
 
 #include"../../../include/System.h"
 
+// For TF
+#include"../../../include/Converter.h"
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 using namespace std;
 
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
+    ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){lastStamp = ros::Time::now(); frameCounter = 0;}
 
     void GrabRGBD(const sensor_msgs::ImageConstPtr& msgRGB,const sensor_msgs::ImageConstPtr& msgD);
 
     ORB_SLAM2::System* mpSLAM;
+
+private:
+    ros::Time lastStamp;
+    int frameCounter;
 };
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "RGBD");
+    ros::init(argc, argv, "SLAM_RGBD");
     ros::start();
 
     if(argc != 3)
@@ -65,8 +75,8 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_color", 1);
-    message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "/camera/depth/image", 1);
+    message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_raw", 1);
+    message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "camera/depth_registered/image_raw", 1);
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
     message_filters::Synchronizer<sync_pol> sync(sync_pol(10), rgb_sub,depth_sub);
     sync.registerCallback(boost::bind(&ImageGrabber::GrabRGBD,&igb,_1,_2));
@@ -109,7 +119,38 @@ void ImageGrabber::GrabRGBD(const sensor_msgs::ImageConstPtr& msgRGB,const senso
         return;
     }
 
-    mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+    cv::Mat Tcw = mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+
+    frameCounter++;
+    // Print frame rate every x second
+    if((cv_ptrRGB->header.stamp - lastStamp).toSec() >= 5.0)
+    {
+        float fps = frameCounter / (cv_ptrRGB->header.stamp - lastStamp).toSec();
+        lastStamp = cv_ptrRGB->header.stamp;
+        ROS_INFO("Frames per second: %f", fps);
+        frameCounter = 0;
+    }
+
+    if(Tcw.empty())
+        return;
+    cv::Mat tcw = Tcw.rowRange(0,3).col(3);
+
+    // Publish tf transform
+    static tf2_ros::TransformBroadcaster br;
+    geometry_msgs::TransformStamped transformStamped;
+    transformStamped.header.stamp = cv_ptrRGB->header.stamp;
+    transformStamped.header.frame_id = "camera_rgb_optical_frame"; 
+    transformStamped.child_frame_id = "world";
+    transformStamped.transform.translation.x = tcw.at<float>(0);
+    transformStamped.transform.translation.y = tcw.at<float>(1);
+    transformStamped.transform.translation.z = tcw.at<float>(2);
+    vector<float> q = ORB_SLAM2::Converter::toQuaternion(Tcw.rowRange(0,3).colRange(0,3));
+    transformStamped.transform.rotation.x = q[0];
+    transformStamped.transform.rotation.y = q[1];
+    transformStamped.transform.rotation.z = q[2];
+    transformStamped.transform.rotation.w = q[3];
+
+    br.sendTransform(transformStamped);
 }
 
 

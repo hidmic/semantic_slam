@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(semantic_cloud)
+project(floatlazer_semantic_cloud)
 
 set(PACKAGE_DEPENDENCIES
   roscpp
