@@ -1,0 +1,23 @@
+# Camera intrinsic matrix parameters (OpenCV)
+camera:
+  fx: 537.960321985614
+  fy: 539.212524414062
+  cx: 320.106652814575
+  cy: 247.632132204719
+
+  width: 640
+  height: 480
+
+semantic_pcl:
+  #Kinetic v2
+  color_image_topic: "/camera/rgb/image_color" #"/kinect2/hd/image_color_rect"
+  depth_image_topic: "/camera/depth/image" #"/kinect2/hd/image_depth_rect"
+  #frame_id: "kinect2_rgb_optical_frame"
+  #color_image_topic: "/camera/rgb/image_raw"
+  #depth_image_topic: "/camera/depth_registered/image_raw"
+  point_type: 1
+  frame_id: "/openni_rgb_optical_frame"
+  dataset: "ade20k" # sunrgbd
+  #dataset: "sunrgbd" # sunrgbd
+  model_path: "/home/yubao/data/Dataset/semantic_slam/pspnet_50_ade20k.pth"
+  #model_path: "/home/interns/xuan/models/pspnet_sunrgbd_best_model180625_5k.pth"

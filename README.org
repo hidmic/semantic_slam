@@ -6,7 +6,9 @@ https://www.bilibili.com/video/av59793400/?p=13
 3. Use =catkin_make= build ros project
 
 * Run bag file
-Download /demo.bag/ from the author.
++ Download /demo.bag/ and pretrained model from the author.
++ Modify parameters: =semantic_slam/params/semantic_cloud.yaml=
+
 
 #+begin_example
 roslaunch floatlazer_semantic_slam semantic_mapping.launch
