@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- ORB_SLAM2 RGBD -->
+  <node pkg="floatlazer_orb_slam2" type="slam_rgbd" name="SLAM_RGBD" output="screen" args="$(find floatlazer_orb_slam2)../../../Vocabulary/ORBvoc.txt $(find floatlazer_semantic_slam)/params/xtion.yaml">
+     <remap from="/camera/rgb/image_raw" to="/camera/rgb/image_color" />
+     <remap from="/camera/depth_registered/image_raw" to="/camera/depth/image" />
+  </node>
+
+</launch>

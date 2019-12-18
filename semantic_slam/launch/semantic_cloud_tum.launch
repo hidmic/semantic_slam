@@ -1,4 +1,4 @@
 <launch>
-    <rosparam file="$(find floatlazer_semantic_slam)/params/semantic_cloud_dynamic_slam.yaml" command="load"/>
+    <rosparam file="$(find floatlazer_semantic_slam)/params/semantic_cloud_tum.yaml" command="load"/>
     <node pkg="floatlazer_semantic_cloud" type="semantic_cloud.py" name="semantic_cloud" output="screen"/>
 </launch>

@@ -112,7 +112,8 @@ class seg_test:
 
 if __name__ == '__main__':
     segnet = seg_test()
-    color_img = cv2.imread('walk_rgb_1.png')
+    # color_img = cv2.imread('walk_rgb_2.png')
+    color_img = cv2.imread('frame0059.jpg')
 
     color_img = cv2.resize(color_img, (segnet.img_width, segnet.img_height), interpolation=cv2.INTER_NEAREST)
 
@@ -135,4 +136,6 @@ if __name__ == '__main__':
     cv2.imshow('Camera image', color_img)
     cv2.imshow('confidence', confidence)
     cv2.imshow('Semantic segmantation', decoded)
+    cv2.imwrite('label.png', label)
+    cv2.imwrite('segmentation.png', decoded)
     cv2.waitKey(0)

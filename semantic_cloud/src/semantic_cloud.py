@@ -212,10 +212,10 @@ class SemanticCloud:
 
         #Add semantic class colors
         decoded = decode_segmap(label, self.n_classes, self.cmap)        # Show input image and decoded image
-        
+
         class_labels = np.unique(label)
         print(class_labels)
-        
+
         confidence = resize(confidence, (self.img_height, self.img_width),  mode = 'reflect', anti_aliasing=True, preserve_range = True)
         cv2.imshow('Camera image', color_img)
         cv2.imshow('confidence', confidence)
@@ -238,7 +238,7 @@ class SemanticCloud:
         # Resize RGB image
         if depth_img.shape[0] is not self.img_height or depth_img.shape[1] is not self.img_width:
             color_img = cv2.resize(color_img, (self.img_width, self.img_height), interpolation=cv2.INTER_NEAREST)
-        
+
         # Resize depth
         if depth_img.shape[0] is not self.img_height or depth_img.shape[1] is not self.img_width:
             depth_img = resize(depth_img, (self.img_height, self.img_width), order = 0, mode = 'reflect', anti_aliasing=False, preserve_range = True) # order = 0, nearest neighbour
