@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>floatlazer_semantic_cloud</name>
+  <name>semantic_cloud</name>
   <version>1.0.0</version>
   <description>Semantic segmantation using convolutional neural network</description>
 
