@@ -85,7 +85,7 @@ class SemanticCloud:
         \param gen_pcl (bool) whether generate point cloud, if set to true the node will subscribe to depth image
         """
         # Get point type
-        point_type = rospy.get_param('/semantic_pcl/point_type')
+        point_type = rospy.get_param('~semantic_pcl/point_type')
         #point_type = 0
         if point_type == 0:
             self.point_type = PointType.COLOR
@@ -108,10 +108,10 @@ class SemanticCloud:
             # Set device
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #GPU: device=cuda
             # Get dataset
-            dataset = rospy.get_param('/semantic_pcl/dataset')
+            dataset = rospy.get_param('~semantic_pcl/dataset')
             # Setup model
             model_name ='pspnet'
-            model_path = rospy.get_param('/semantic_pcl/model_path')
+            model_path = rospy.get_param('~semantic_pcl/model_path')
             #model_path = '/home/yubao/data/SpacialAI/catkin_ws/src/dataset/pspnet_sunrgbd_best_model180625_5k.pth'
             if dataset == 'sunrgbd': # If use version fine tuned on sunrgbd dataset
                 self.n_classes = 38 # Semantic class number
@@ -136,10 +136,10 @@ class SemanticCloud:
             # Set device
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             # Get dataset
-            dataset = rospy.get_param('/semantic_pcl/dataset')
+            dataset = rospy.get_param('~semantic_pcl/dataset')
             # Setup model
             model_name ='pspnet'
-            model_path = rospy.get_param('/semantic_pcl/model_path')
+            model_path = rospy.get_param('~semantic_pcl/model_path')
             if dataset == 'sunrgbd': # If use version fine tuned on sunrgbd dataset
                 self.n_classes = 38 # Semantic class number
                 self.model = get_model(model_name, self.n_classes, version = 'sunrgbd_res50')
@@ -165,26 +165,26 @@ class SemanticCloud:
         print('Setting up ROS...')
         self.bridge = CvBridge() # CvBridge to transform ROS Image message to OpenCV image
         # Semantic image publisher
-        self.sem_img_pub = rospy.Publisher("/semantic_pcl/semantic_image", Image, queue_size = 1)
+        self.sem_img_pub = rospy.Publisher("semantic_pcl/semantic_image", Image, queue_size = 1)
         # Set up ros image subscriber
         # Set buff_size to average msg size to avoid accumulating delay
         if gen_pcl:
             # Point cloud frame id
-            frame_id = rospy.get_param('/semantic_pcl/frame_id')
+            frame_id = rospy.get_param('~semantic_pcl/frame_id')
             # Camera intrinsic matrix
-            fx = rospy.get_param('/camera/fx')
-            fy = rospy.get_param('/camera/fy')
-            cx = rospy.get_param('/camera/cx')
-            cy = rospy.get_param('/camera/cy')
+            fx = rospy.get_param('~camera/fx')
+            fy = rospy.get_param('~camera/fy')
+            cx = rospy.get_param('~camera/cx')
+            cy = rospy.get_param('~camera/cy')
             intrinsic = np.matrix([[fx, 0, cx], [0, fy, cy], [0, 0, 1]], dtype = np.float32)
-            self.pcl_pub = rospy.Publisher("/semantic_pcl/semantic_pcl", PointCloud2, queue_size = 1)
-            self.color_sub = message_filters.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, queue_size = 1, buff_size = 30*480*640)
-            self.depth_sub = message_filters.Subscriber(rospy.get_param('/semantic_pcl/depth_image_topic'), Image, queue_size = 1, buff_size = 40*480*640 ) # increase buffer size to avoid del ay (despite queue_size = 1)
+            self.pcl_pub = rospy.Publisher("semantic_pcl/semantic_pcl", PointCloud2, queue_size = 1)
+            self.color_sub = message_filters.Subscriber(rospy.get_param('~semantic_pcl/color_image_topic'), Image, queue_size = 1, buff_size = 30*480*640)
+            self.depth_sub = message_filters.Subscriber(rospy.get_param('~semantic_pcl/depth_image_topic'), Image, queue_size = 1, buff_size = 40*480*640 ) # increase buffer size to avoid del ay (despite queue_size = 1)
             self.ts = message_filters.ApproximateTimeSynchronizer([self.color_sub, self.depth_sub], queue_size = 1, slop = 0.3) # Take in one color image and one depth image with a limite time gap between message time stamps
             self.ts.registerCallback(self.color_depth_callback)
             self.cloud_generator = ColorPclGenerator(intrinsic, self.img_width,self.img_height, frame_id , self.point_type)
         else:
-            self.image_sub = rospy.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
+            self.image_sub = rospy.Subscriber(rospy.get_param('~semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
             #self.image_sub = rospy.Subscriber('/kinect2/hd/image_color_rect', Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
 
         print('Ready.')
